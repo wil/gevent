@@ -175,6 +175,15 @@ def run(command, **kwargs):
     return RunResult(result, out)
 
 
+def expected_match(name, expected):
+    name_parts = set(name.split())
+    assert name_parts
+    for item in expected:
+        item = set(item.split())
+        if item.issubset(name_parts):
+            return True
+
+
 def report(total, failed, exit=True, took=None, expected=None):
     if runtimelog:
         log('\nLongest-running tests:')
@@ -193,7 +202,7 @@ def report(total, failed, exit=True, took=None, expected=None):
         log('\n%s/%s tests failed%s', len(failed), total, took)
         expected = set(expected or [])
         for name in failed:
-            if name in expected:
+            if expected_match(name, expected):
                 log('- %s (expected)', name)
             else:
                 log('- %s', name)
