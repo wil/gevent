@@ -2,6 +2,7 @@ import sys
 import os
 import glob
 import util
+import atexit
 
 
 TIMEOUT = 120
@@ -22,6 +23,9 @@ def TESTRUNNER(tests=None):
     tests = [os.path.basename(x) for x in tests]
     options = {'cwd': directory,
                'setenv': {'PYTHONPATH': PYTHONPATH}}
+
+    if tests:
+        atexit.register(os.system, 'rm -f */@test*_tmp')
 
     for filename in tests:
         yield directory + '/' + filename, [sys.executable, '-u', '-m', 'monkey_test', filename], options.copy()
