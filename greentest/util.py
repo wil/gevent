@@ -175,7 +175,7 @@ def run(command, **kwargs):
     return RunResult(result, out)
 
 
-def report(total, failed, exit=True, took=None):
+def report(total, failed, exit=True, took=None, expected=None):
     if runtimelog:
         log('\nLongest-running tests:')
         runtimelog.sort()
@@ -187,13 +187,22 @@ def report(total, failed, exit=True, took=None):
         took = ' in %.1fs' % took
     else:
         took = ''
+
+    error_count = 0
     if failed:
-        log('\n%s/%s tests failed%s\n- %s', len(failed), total, took, '\n- '.join(failed))
+        log('\n%s/%s tests failed%s', len(failed), total, took)
+        expected = set(expected or [])
+        for name in failed:
+            if name in expected:
+                log('- %s (expected)', name)
+            else:
+                log('- %s', name)
+                error_count += 1
     else:
         log('\n%s tests passed%s', total, took)
     if exit:
-        if failed:
-            sys.exit(min(255, len(failed)))
+        if error_count:
+            sys.exit(min(255, error_count))
         if total <= 0:
             sys.exit('No tests found.')
 
