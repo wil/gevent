@@ -193,7 +193,6 @@ def format_seconds(seconds):
     seconds = str(timedelta(seconds=round(seconds)))
     if seconds.startswith('0:'):
         seconds = seconds[2:]
-    seconds = seconds.lstrip('0')
     return seconds
 
 
