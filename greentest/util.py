@@ -167,6 +167,13 @@ def run(command, **kwargs):
 
 
 def report(total, failed, exit=True, took=None):
+    if runtimelog:
+        log('\nLongest-running tests:')
+        runtimelog.sort()
+        length = len('%.1f' % -runtimelog[0][0])
+        frmt = '%' + str(length) + '.1f seconds: %s'
+        for took, name in runtimelog[:5]:
+            log(frmt, -took, name)
     if took:
         took = ' in %.1fs' % took
     else:
@@ -175,13 +182,6 @@ def report(total, failed, exit=True, took=None):
         log('\n%s/%s tests failed%s\n- %s', len(failed), total, took, '\n- '.join(failed))
     else:
         log('\n%s tests passed%s', total, took)
-    if runtimelog:
-        log('\nLongest-running tests:')
-        runtimelog.sort()
-        length = len('%.1f' % -runtimelog[0][0])
-        frmt = '%' + str(length) + '.1f seconds: %s'
-        for took, name in runtimelog[:5]:
-            log(frmt, -took, name)
     if exit:
         if failed:
             sys.exit(1)
