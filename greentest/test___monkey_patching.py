@@ -5,7 +5,7 @@ import util
 import atexit
 
 
-TIMEOUT = 90
+TIMEOUT = 45
 directory = '%s.%s' % sys.version_info[:2]
 version = '%s.%s.%s' % sys.version_info[:3]
 
