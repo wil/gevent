@@ -14,14 +14,11 @@ def TESTRUNNER(tests=None):
     if preferred_version != version:
         util.log('WARNING: The tests in %s/ are from version %s and your Python is %s', directory, preferred_version, version)
 
-    env = os.environ.copy()
-    env['PYTHONPATH'] = os.getcwd() + ':' + os.environ.get('PYTHONPATH', '')
-
     if not tests:
         tests = sorted(glob.glob('%s/test_*.py' % directory))
 
     tests = [os.path.basename(x) for x in tests]
-    options = {'cwd': directory, 'env': env}
+    options = {'cwd': directory}
 
     for filename in tests:
         yield directory + '/' + filename, [sys.executable, '-u', '-m', 'monkey_test', filename], options
@@ -30,7 +27,7 @@ def TESTRUNNER(tests=None):
 
 def main():
     import testrunner
-    return testrunner.run_many(TESTRUNNER())
+    return testrunner.run_many(TESTRUNNER(sys.argv[1:]))
 
 
 if __name__ == '__main__':
