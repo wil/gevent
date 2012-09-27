@@ -26,7 +26,7 @@ install:
  - sudo dpkg -i python$VER-psycopg2_2.4.5_i386.deb
  - sudo dpkg -i python$VER-pysendfile_2.0.0_i386.deb
  - tar -xf web.py-0.37.tar.gz && cd web.py-0.37 && sudo $PYTHON setup.py -q install && cd -
- - if [[ $INSTALL_PEP8 == '1' ]]; then sudo pip install --use-mirrors -q pep8; fi
+ - if [[ $VER == '2.7' ]]; then sudo pip install --use-mirrors -q pep8; fi
  - cython --version
  - $PYTHON -c 'import greenlet; print greenlet, greenlet.__version__; import psycopg2; print psycopg2, psycopg2.__version__; import web; print web, web.__version__'
  - "echo `date`: Started installing gevent"
