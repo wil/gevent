@@ -1,0 +1,1 @@
+GEVENT_RESOLVER=ares GEVENTARES_SERVERS=8.8.8.8 test__socket_dns.py
