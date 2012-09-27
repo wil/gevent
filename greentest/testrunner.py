@@ -36,7 +36,7 @@ def process_tests(tests):
     return [process_test(name, cmd, options) for (name, cmd, options) in tests]
 
 
-def run_many(tests):
+def run_many(tests, expected=None):
     global NWORKERS, pool
     start = time.time()
     total = 0
@@ -67,7 +67,7 @@ def run_many(tests):
                     util.log('Waiting for currently running to finish...')
                     pool.join()
             except KeyboardInterrupt:
-                util.report(total, failed, exit=False, took=time.time() - start)
+                util.report(total, failed, exit=False, took=time.time() - start, expected=expected)
                 util.log('(partial results)\n')
                 raise
     except:
@@ -90,13 +90,13 @@ def run_many(tests):
 
     os.system('rm -f */@test*_tmp')
     util.log('gevent version %s from %s', gevent.__version__, gevent.__file__)
-    util.report(total, failed, took=time.time() - start)
+    util.report(total, failed, took=time.time() - start, expected=expected)
     assert not pool, pool
 
 
 def discover(tests=None, ignore=None):
     if isinstance(ignore, basestring):
-        ignore = load_ignore_list(ignore)
+        ignore = load_list_from_file(ignore)
 
     ignore = set(ignore or [])
 
@@ -126,7 +126,7 @@ def remove_options(lst):
     return [x for x in lst if x and not x.startswith('-')]
 
 
-def load_ignore_list(filename):
+def load_list_from_file(filename):
     result = []
     if filename:
         for x in open(filename):
@@ -160,7 +160,9 @@ def main():
     parser.add_option('--ignore')
     parser.add_option('--discover', action='store_true')
     parser.add_option('--full', action='store_true')
+    parser.add_option('--expected')
     options, args = parser.parse_args()
+    options.expected = load_list_from_file(options.expected)
     if options.full:
         assert options.ignore is None, '--ignore and --full are not compatible'
         tests = full(args)
@@ -171,7 +173,7 @@ def main():
             print '%s: %s' % (name, ' '.join(cmd))
         print '%s tests found.' % len(tests)
     else:
-        run_many(tests)
+        run_many(tests, expected=options.expected)
 
 
 if __name__ == '__main__':
