@@ -21,7 +21,7 @@ if getattr(resolver, 'pool', None) is not None:
 assert gevent_socket.gaierror is socket.gaierror
 assert gevent_socket.error is socket.error
 
-VERBOSE = sys.argv.count('-v') + 2 * sys.argv.count('-vv')
+DEBUG = False
 
 
 def _run(function, *args):
@@ -47,18 +47,25 @@ def format_call(function, args):
 
 def log_fresult(result, seconds):
     if isinstance(result, Exception):
-        log('  -=>  raised %r          %.2fms', result, seconds * 1000.0)
+        msg = '  -=>  raised %r' % (result, )
     else:
-        log('  -=>  returned %r         %.2fms', result, seconds * 1000.0)
+        msg = '  -=>  returned %r' % (result, )
+    time = ' %.2fms' % (seconds * 1000.0, )
+    space = 80 - len(msg) - len(time)
+    if space > 0:
+        space = ' ' * space
+    else:
+        space = ''
+    log(msg + space + time)
 
 
 def run(function, *args):
-    if VERBOSE >= 2:
+    if DEBUG:
         log(format_call(function, args))
     delta = time()
     result = _run(function, *args)
     delta = time() - delta
-    if VERBOSE >= 2:
+    if DEBUG:
         log_fresult(result, delta)
     return result, delta
 
@@ -168,15 +175,18 @@ class TestCase(greentest.TestCase):
     __timeout__ = 30
     switch_expected = None
 
+    def should_log_results(self, result1, result2):
+        if isinstance(result1, BaseException) and isinstance(result2, BaseException):
+            return type(result1) is not type(result2)
+        return repr(result1) != repr(result2)
+
     def _test(self, func, *args):
-        if VERBOSE:
-            log('')
         gevent_func = getattr(gevent_socket, func)
         real_func = getattr(socket, func)
         real_result, time_real = run(real_func, *args)
         gevent_result, time_gevent = run(gevent_func, *args)
-        if VERBOSE == 1 and repr(gevent_result) != repr(real_result):
-            # slightly less verbose mode: only print the results that are different
+        if not DEBUG and self.should_log_results(real_result, gevent_result):
+            log('')
             log_call(real_result, time_real, real_func, *args)
             log_call(gevent_result, time_gevent, gevent_func, *args)
         self.assertEqualResults(real_result, gevent_result, func, args)
