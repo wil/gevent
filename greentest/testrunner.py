@@ -88,7 +88,6 @@ def run_many(tests, expected=None):
         util.log('\n%s tests failed during concurrent run but succeeded when ran sequentially:', len(failed_then_succeeded))
         util.log('- ' + '\n- '.join(failed_then_succeeded))
 
-    os.system('rm -f */@test*_tmp')
     util.log('gevent version %s from %s', gevent.__version__, gevent.__file__)
     util.report(total, failed, took=time.time() - start, expected=expected)
     assert not pool, pool
