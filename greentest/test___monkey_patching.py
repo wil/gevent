@@ -5,7 +5,7 @@ import util
 import atexit
 
 
-TIMEOUT = 120
+TIMEOUT = 90
 directory = '%s.%s' % sys.version_info[:2]
 version = '%s.%s.%s' % sys.version_info[:3]
 
@@ -22,6 +22,7 @@ def TESTRUNNER(tests=None):
 
     tests = [os.path.basename(x) for x in tests]
     options = {'cwd': directory,
+               'timeout': TIMEOUT,
                'setenv': {'PYTHONPATH': PYTHONPATH}}
 
     if tests:
