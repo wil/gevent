@@ -17,8 +17,11 @@ def TESTRUNNER(tests=None):
     if not tests:
         tests = sorted(glob.glob('%s/test_*.py' % directory))
 
+    PYTHONPATH = (os.getcwd() + ':' + os.environ.get('PYTHONPATH', '')).rstrip(':')
+
     tests = [os.path.basename(x) for x in tests]
-    options = {'cwd': directory}
+    options = {'cwd': directory,
+               'setenv': {'PYTHONPATH': PYTHONPATH}}
 
     for filename in tests:
         yield directory + '/' + filename, [sys.executable, '-u', '-m', 'monkey_test', filename], options
