@@ -190,8 +190,8 @@ def report(total, failed, exit=True, took=None, expected=None):
         runtimelog.sort()
         length = len('%.1f' % -runtimelog[0][0])
         frmt = '%' + str(length) + '.1f seconds: %s'
-        for took, name in runtimelog[:5]:
-            log(frmt, -took, name)
+        for delta, name in runtimelog[:5]:
+            log(frmt, -delta, name)
     if took:
         took = ' in %.1fs' % took
     else:
