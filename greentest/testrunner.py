@@ -24,7 +24,9 @@ def spawn(*args, **kwargs):
 
 def process_test(name, cmd, options):
     options = options or {}
-    env = ' '.join('%s=%s' % x for x in options.get('setenv', {}).items())
+    setenv = options.get('setenv', {}).copy()
+    setenv.pop('PYTHONPATH', '')
+    env = ' '.join('%s=%s' % x for x in setenv.items())
     if env and env not in name:
         name = env + ' ' + name
     return name, cmd, options
