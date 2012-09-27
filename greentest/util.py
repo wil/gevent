@@ -24,7 +24,10 @@ class Popen(subprocess.Popen):
 
 def log(message, *args):
     try:
-        string = message % args
+        if args:
+            string = message % args
+        else:
+            string = message
     except Exception:
         traceback.print_exc()
         try:
