@@ -5,7 +5,7 @@ from gevent import monkey; monkey.patch_all()
 import sys
 import os
 import glob
-import time
+from time import time
 
 from gevent.pool import Pool
 import util
@@ -45,7 +45,7 @@ def process_tests(tests):
 
 def run_many(tests, expected=None):
     global NWORKERS, pool
-    start = time.time()
+    start = time()
     total = 0
     failed = {}
 
@@ -74,7 +74,7 @@ def run_many(tests, expected=None):
                     util.log('Waiting for currently running to finish...')
                     pool.join()
             except KeyboardInterrupt:
-                util.report(total, failed, exit=False, took=time.time() - start, expected=expected)
+                util.report(total, failed, exit=False, took=time() - start, expected=expected)
                 util.log('(partial results)\n')
                 raise
     except:
@@ -85,9 +85,9 @@ def run_many(tests, expected=None):
     failed_then_succeeded = []
 
     if NWORKERS > 1 and toretry:
-        util.log('\nWill re-try %s failed tests without concurrency:\n- %s\n', len(toretry), '\n- '.join(toretry))
+        util.log('\nWill retry %s failed tests without concurrency:\n- %s\n', len(toretry), '\n- '.join(toretry))
         for name, (cmd, kwargs, _ignore) in failed.items():
-            if not util.run(cmd, buffer_output=False, **kwargs):
+            if not util.run(cmd, name=name, buffer_output=False, **kwargs):
                 failed.pop(name)
                 failed_then_succeeded.append(name)
 
@@ -96,7 +96,7 @@ def run_many(tests, expected=None):
         util.log('- ' + '\n- '.join(failed_then_succeeded))
 
     util.log('gevent version %s from %s', gevent.__version__, gevent.__file__)
-    util.report(total, failed, took=time.time() - start, expected=expected)
+    util.report(total, failed, took=time() - start, expected=expected)
     assert not pool, pool
 
 
