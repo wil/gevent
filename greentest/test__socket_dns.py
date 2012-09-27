@@ -77,10 +77,12 @@ def compare_ipv6(a, b):
     True
     >>> compare_ipv6('2a00:1450:400f:801::1010', '2aXX:1450:400f:900::1011')
     False
+    >>> compare_ipv6('2a00:1450:4016:800::1013', '2a00:1450:4008:c01::93')
+    True
     """
     if a.count(':') == 5 and b.count(':') == 5:
         # QQQ not actually sure if this is right thing to do
-        return a.rsplit(':')[:-2] == b.rsplit(':')[:-2]
+        return a.rsplit(':')[:2] == b.rsplit(':')[:2]
     if google_host_re.match(a) and google_host_re.match(b):
         return True
     return a == b
