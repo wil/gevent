@@ -117,7 +117,7 @@ def discover(tests=None, ignore=None):
                     continue
                 to_process.append((filename + ' ' + name, cmd, options))
         else:
-            to_process.append((filename, [sys.executable, '-u', filename], default_options))
+            to_process.append((filename, [sys.executable, '-u', filename], default_options.copy()))
 
     return to_process
 
@@ -139,15 +139,13 @@ def load_ignore_list(filename):
 def full(args=None):
     tests = []
 
-    for resolver in ('thread', 'ares'):
-        if resolver != 'thread':
-            ignore = 'tests_that_dont_use_resolver.txt'
-        else:
-            ignore = None
+    for setenv, ignore in [('GEVENT_RESOLVER=thread', None),
+                           ('GEVENT_RESOLVER=ares GEVENTARES_SERVERS=8.8.8.8', 'tests_that_dont_use_resolver.txt')]:
+        setenv = dict(x.split('=') for x in setenv.split())
         for name, cmd, options in discover(args, ignore=ignore):
-            setenv = options.get('setenv', {})
-            setenv['GEVENT_RESOLVER'] = resolver
-            options['setenv'] = setenv
+            my_setenv = options.get('setenv', {})
+            my_setenv.update(setenv)
+            options['setenv'] = my_setenv
             tests.append((name, cmd, options))
 
     if sys.version_info[:2] == (2, 7):
