@@ -5,19 +5,11 @@ python:
   - "2.7"
 env:
   -
-  - GEVENT_RESOLVER=ares
   - GEVENT_FILE=thread
   - GEVENT_BACKEND=select
   - GEVENT_BACKEND=poll
   - GEVENT_BACKEND=signalfd
   - GEVENT_BACKEND=nosigmask
-  - GEVENT_RESOLVER=ares GEVENT_BACKEND=signalfd
-  - GEVENT_RESOLVER=ares GEVENT_FILE=thread
-  - NWORKERS=1 TESTS="*dns*.py" GEVENT_RESOLVER=ares GEVENTARES_SERVERS=8.8.8.8
-matrix:
-  include:
-    - python: 2.7
-      env: TESTS=xtest_pep8.py INSTALL_PEP8=1
 install:
  - deactivate
  - export VER=$TRAVIS_PYTHON_VERSION
@@ -41,7 +33,7 @@ install:
  - sudo $PYTHON setup.py install
 script:
  - "echo `date`: Started testing"
- - cd greentest && $PYTHON testrunner.py $TESTS
+ - cd greentest && $PYTHON testrunner.py --full
  - "echo `date`: Finished testing"
 notifications:
   email:
