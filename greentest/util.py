@@ -98,16 +98,22 @@ def getname(command):
 
 
 def start(command, **kwargs):
+    name = kwargs.pop('name', None) or getname(command)
     timeout = kwargs.pop('timeout', None)
     preexec_fn = None
     if not os.environ.get('DO_NOT_SETPGRP'):
         preexec_fn = getattr(os, 'setpgrp', None)
     env = kwargs.pop('env', None)
+    setenv = kwargs.pop('setenv', None) or {}
     if preexec_fn is not None:
-        if env is None:
+        setenv['DO_NOT_SETPGRP'] = '1'
+    if setenv:
+        if env:
+            env = env.copy()
+        else:
             env = os.environ.copy()
-        env['DO_NOT_SETPGRP'] = '1'
-    log('+ %s', getname(command))
+        env.update(setenv)
+    log('+ %s', name)
     popen = Popen(command, preexec_fn=preexec_fn, env=env, **kwargs)
     popen.setpgrp_enabled = preexec_fn is not None
     if timeout is not None:
@@ -132,7 +138,7 @@ class RunResult(object):
 
 
 def run(command, **kwargs):
-    name = getname(command)
+    name = kwargs.get('name') or getname(command)
     buffer_output = kwargs.pop('buffer_output', BUFFER_OUTPUT)
     if buffer_output:
         assert 'stdout' not in kwargs and 'stderr' not in kwargs, kwargs
