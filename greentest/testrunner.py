@@ -26,9 +26,16 @@ def process_test(name, cmd, options):
     options = options or {}
     setenv = options.get('setenv', {}).copy()
     setenv.pop('PYTHONPATH', '')
-    env = ' '.join('%s=%s' % x for x in setenv.items())
-    if env and env not in name:
-        name = env + ' ' + name
+    environ = options.get('env')
+    if environ is None:
+        environ = os.environ.copy()
+    for key, value in environ.items():
+        if key.startswith('GEVENT_') or key.startswith('GEVENTARES_'):
+            if key not in setenv:
+                setenv[key] = value
+    env_str = ' '.join('%s=%s' % x for x in setenv.items())
+    if env_str and env_str not in name:
+        name = env_str + ' ' + name
     return name, cmd, options
 
 
