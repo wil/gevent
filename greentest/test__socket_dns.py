@@ -448,11 +448,7 @@ class Test_getnameinfo_fail(TestCase):
 class TestInvalidPort(TestCase):
 
     def test1(self):
-        try:
-            self._test('getnameinfo', ('www.gevent.org', -1), 0)
-        except AssertionError, ex:
-            # XXX to fix
-            log('ERROR: %s', ex)
+        self._test('getnameinfo', ('www.gevent.org', -1), 0)
 
     def test2(self):
         self._test('getnameinfo', ('www.gevent.org', None), 0)
