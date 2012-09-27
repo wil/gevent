@@ -16,21 +16,22 @@ NWORKERS = int(os.environ.get('NWORKERS') or 8)
 pool = None
 
 
-def info():
-    lastmsg = None
-    while True:
-        gevent.sleep(10, ref=False)
-        if pool:
-            msg = '# Currently running: %s: %s' % (len(pool), ', '.join(x.name for x in pool))
-            if msg != lastmsg:
-                lastmsg = msg
-                util.log(msg)
-
-
 def spawn(*args, **kwargs):
     g = pool.spawn(*args, **kwargs)
     g.link_exception(lambda *args: sys.exit('Internal error'))
     return g
+
+
+def process_test(name, cmd, options):
+    options = options or {}
+    env = ' '.join('%s=%s' % x for x in options.get('setenv', {}).items())
+    if env and env not in name:
+        name = env + ' ' + name
+    return name, cmd, options
+
+
+def process_tests(tests):
+    return [process_test(name, cmd, options) for (name, cmd, options) in tests]
 
 
 def run_many(tests):
@@ -39,27 +40,24 @@ def run_many(tests):
     total = 0
     failed = {}
 
-    tests = list(tests)
+    tests = process_tests(tests)
     NWORKERS = min(len(tests), NWORKERS)
     pool = Pool(NWORKERS)
     util.BUFFER_OUTPUT = NWORKERS > 1
 
     def run_one(name, cmd, **kwargs):
-        result = util.run(cmd, **kwargs)
+        result = util.run(cmd, name=name, **kwargs)
         if result:
             # the tests containing AssertionError might have failed because
             # we spawned more workers than CPUs
             # we therefore will retry them sequentially
             failed[name] = [cmd, kwargs, 'AssertionError' in (result.output or '')]
 
-    if NWORKERS > 1:
-        gevent.spawn(info)
-
     try:
         try:
             for name, cmd, options in tests:
                 total += 1
-                spawn(run_one, name, cmd, **options).name = ' '.join(cmd)
+                spawn(run_one, name, cmd, **options)
             gevent.run()
         except KeyboardInterrupt:
             try:
@@ -84,19 +82,26 @@ def run_many(tests):
                 failed.pop(name)
                 failed_then_succeeded.append(name)
 
-    util.report(total, failed, took=time.time() - start)
-
     if failed_then_succeeded:
         util.log('\n%s tests failed during concurrent run but succeeded when ran sequentially:', len(failed_then_succeeded))
         util.log('- ' + '\n- '.join(failed_then_succeeded))
-    assert not pool, pool
 
     os.system('rm -f */@test*_tmp')
+    util.log('gevent version %s from %s', gevent.__version__, gevent.__file__)
+    util.report(total, failed, took=time.time() - start)
+    assert not pool, pool
 
 
-def discover(tests):
+def discover(tests=None, ignore=None):
+    if isinstance(ignore, basestring):
+        ignore = load_ignore_list(ignore)
+
+    ignore = set(ignore or [])
+
     if not tests:
         tests = set(glob.glob('test_*.py')) - set(['test_support.py'])
+        if ignore:
+            tests -= ignore
         tests = sorted(tests)
 
     to_process = []
@@ -106,6 +111,8 @@ def discover(tests):
         if 'TESTRUNNER' in open(filename).read():
             module = __import__(filename.rsplit('.', 1)[0])
             for name, cmd, options in module.TESTRUNNER():
+                if remove_options(cmd)[-1] in ignore:
+                    continue
                 to_process.append((filename + ' ' + name, cmd, options))
         else:
             to_process.append((filename, [sys.executable, '-u', filename], default_options))
@@ -113,8 +120,58 @@ def discover(tests):
     return to_process
 
 
+def remove_options(lst):
+    return [x for x in lst if x and not x.startswith('-')]
+
+
+def load_ignore_list(filename):
+    result = []
+    if filename:
+        for x in open(filename):
+            x = x.split('#', 1)[0].strip()
+            if x:
+                result.append(x)
+    return result
+
+
+def full(args=None):
+    tests = []
+
+    for resolver in ('thread', 'ares'):
+        if resolver != 'thread':
+            ignore = 'tests_that_dont_use_resolver.txt'
+        else:
+            ignore = None
+        for name, cmd, options in discover(args, ignore=ignore):
+            setenv = options.get('setenv', {})
+            setenv['GEVENT_RESOLVER'] = resolver
+            options['setenv'] = setenv
+            tests.append((name, cmd, options))
+
+    if sys.version_info[:2] == (2, 7):
+        tests.append(('xtest_pep8.py', [sys.executable, '-u', 'xtest_pep8.py'], None))
+
+    return tests
+
+
 def main():
-    run_many(discover(sys.argv[1:]))
+    import optparse
+    parser = optparse.OptionParser()
+    parser.add_option('--ignore')
+    parser.add_option('--discover', action='store_true')
+    parser.add_option('--full', action='store_true')
+    options, args = parser.parse_args()
+    if options.full:
+        assert options.ignore is None, '--ignore and --full are not compatible'
+        tests = full(args)
+    else:
+        tests = discover(args, options.ignore)
+    if options.discover:
+        for name, cmd, options in process_tests(tests):
+            print '%s: %s' % (name, ' '.join(cmd))
+        print '%s tests found.' % len(tests)
+    else:
+        run_many(tests)
 
 
 if __name__ == '__main__':
