@@ -11,6 +11,10 @@ env:
   - GEVENT_BACKEND=poll GEVENTSETUP_EV_VERIFY=3
   - GEVENT_BACKEND=signalfd
   - GEVENT_BACKEND=nosigmask
+  - GEVENT_BACKEND=noinotify
+matrix:
+ allow_failures:
+   GEVENT_BACKEND=signalfd
 install:
  - deactivate
  - export VER=$TRAVIS_PYTHON_VERSION
