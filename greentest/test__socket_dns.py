@@ -79,7 +79,8 @@ def compare_ipv6(a, b):
     False
     """
     if a.count(':') == 5 and b.count(':') == 5:
-        return a.rsplit(':')[:-3] == b.rsplit(':')[:-3]
+        # QQQ not actually sure if this is right thing to do
+        return a.rsplit(':')[:-2] == b.rsplit(':')[:-2]
     if google_host_re.match(a) and google_host_re.match(b):
         return True
     return a == b
