@@ -184,7 +184,7 @@ def report(total, failed, exit=True, took=None):
         log('\n%s tests passed%s', total, took)
     if exit:
         if failed:
-            sys.exit(1)
+            sys.exit(min(255, len(failed)))
         if total <= 0:
             sys.exit('No tests found.')
 
