@@ -5,9 +5,10 @@ python:
   - "2.7"
 env:
   -
+  - GEVENT_EV_VERIFY=3
   - GEVENT_FILE=thread
-  - GEVENT_BACKEND=select
-  - GEVENT_BACKEND=poll
+  - GEVENT_BACKEND=select GEVENT_EV_VERIFY=3
+  - GEVENT_BACKEND=poll GEVENT_EV_VERIFY=3
   - GEVENT_BACKEND=signalfd
   - GEVENT_BACKEND=nosigmask
 install:
@@ -33,7 +34,7 @@ install:
  - sudo $PYTHON setup.py install
 script:
  - "echo `date`: Started testing"
- - cd greentest && $PYTHON testrunner.py --full
+ - cd greentest && $PYTHON testrunner.py --full --expected expected_failures.txt
  - "echo `date`: Finished testing"
 notifications:
   email:
