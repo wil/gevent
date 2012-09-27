@@ -24,8 +24,8 @@ def TESTRUNNER(tests=None):
                'setenv': {'PYTHONPATH': PYTHONPATH}}
 
     for filename in tests:
-        yield directory + '/' + filename, [sys.executable, '-u', '-m', 'monkey_test', filename], options
-        yield directory + '/' + filename + '/Event', [sys.executable, '-u', '-m', 'monkey_test', '--Event', filename], options
+        yield directory + '/' + filename, [sys.executable, '-u', '-m', 'monkey_test', filename], options.copy()
+        yield directory + '/' + filename + '/Event', [sys.executable, '-u', '-m', 'monkey_test', '--Event', filename], options.copy()
 
 
 def main():
