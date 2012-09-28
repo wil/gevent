@@ -102,6 +102,8 @@ def getname(command):
 
 
 def start(command, **kwargs):
+    # XXX should not really need 'name' there: can still figure it out
+    # from command + environment vars starting with GEVENT_ and GEVENTARES_
     name = kwargs.pop('name', None) or getname(command)
     timeout = kwargs.pop('timeout', None)
     preexec_fn = None
